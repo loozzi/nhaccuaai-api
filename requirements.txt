@@ -1,5 +1,7 @@
 flask
 flask-restplus
+flask-cors
+flask-bcrypt
 flask-SQLAlchemy
 requests
 spotipy

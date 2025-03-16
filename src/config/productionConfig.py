@@ -6,4 +6,4 @@ class ProductionConfig:
         self.DEBUG = False
         self.ENV = EnvironmentConfig("prod")
         self.HOST = "0.0.00"
-        self.PORT = 5000
+        self.PORT = 80

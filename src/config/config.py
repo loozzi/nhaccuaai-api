@@ -7,6 +7,8 @@ class Config:
         self.__devConfig = DevConfig()
         self.__prodConfig = ProductionConfig()
 
+        self.PREFIX_URL = "/api"
+
     def getDevConfig(self):
         return self.__devConfig
 
