@@ -3,3 +3,4 @@ flask-restplus
 flask-SQLAlchemy
 requests
 spotipy
+dotenv
