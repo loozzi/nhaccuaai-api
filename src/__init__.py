@@ -20,4 +20,6 @@ app.env = env.ENV_NAME
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+from .models import *
+
 app.register_blueprint(__api, url_prefix=_config.PREFIX_URL)
