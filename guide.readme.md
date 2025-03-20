@@ -1,6 +1,10 @@
-## Run server
+## Run server in developer mode
 
     python app.py
+
+or run on production mode
+
+    python app.py --production
 
 ## Update database:
 

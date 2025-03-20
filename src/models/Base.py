@@ -26,6 +26,9 @@ class Base(db.Model):
         db.session.commit()
         return self
 
+    def get(self, id: int):
+        return self.query.get(id)
+
     def save(self):
         db.session.add(self)
         db.session.commit()
