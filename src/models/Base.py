@@ -44,11 +44,14 @@ class Base(db.Model):
         return f"<{self.__class__.__name__} {self.id}>"
 
     def __str__(self):
+        def format_value(value):
+            if hasattr(value, "value"):
+                return value.value
+            elif isinstance(value, (datetime.datetime, datetime.date)):
+                return value.isoformat()
+            else:
+                return value
+
         return {
-            c.name: (
-                getattr(self, c.name).value
-                if hasattr(getattr(self, c.name), "value")
-                else getattr(self, c.name)
-            )
-            for c in self.__table__.columns
+            c.name: format_value(getattr(self, c.name)) for c in self.__table__.columns
         }
