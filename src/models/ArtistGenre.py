@@ -14,6 +14,16 @@ class ArtistGenre(Base):
     )
 
     def __init__(self, artist_id: int, genre_id: int) -> "ArtistGenre":
+        exists = (
+            self.query.filter_by(artist_id=artist_id)
+            .filter_by(genre_id=genre_id)
+            .first()
+        )
+        if exists:
+            exists.is_deleted = False
+            exists.save()
+            return exists
+
         self.artist_id = artist_id
         self.genre_id = genre_id
         self.save()
@@ -22,42 +32,39 @@ class ArtistGenre(Base):
     def __repr__(self):
         return f"<ArtistGenre {self.id}>"
 
-    def get_artist_genres(self, artist_id: int) -> list:
+    @staticmethod
+    def get_artist_genres(artist_id: int) -> list:
         """
         Get all genres of an artist
         :param artist_id: The artist ID
         :return: The genres
         """
         return (
-            self.query.filter_by(is_deleted=False).filter_by(artist_id=artist_id).all()
+            ArtistGenre.query.filter_by(is_deleted=False)
+            .filter_by(artist_id=artist_id)
+            .all()
         )
 
-    def get_genre_artists(self, genre_id: int) -> list:
+    @staticmethod
+    def get_genre_artists(genre_id: int) -> list:
         """
         Get all artists of a genre
         :param genre_id: The genre ID
         :return: The artists
         """
-        return self.query.filter_by(is_deleted=False).filter_by(genre_id=genre_id).all()
-
-    def toggle(self, artist_id: int, genre_id: int) -> "ArtistGenre":
-        """
-        Toggle an artist genre
-        :param artist_id: The artist ID
-        :param genre_id: The genre ID
-        :return: The artist genre
-        """
-        artist_genre = (
-            self.query.filter_by(artist_id=artist_id)
+        return (
+            ArtistGenre.query.filter_by(is_deleted=False)
             .filter_by(genre_id=genre_id)
-            .first()
+            .all()
         )
-        if artist_genre:
-            if artist_genre.is_deleted:
-                artist_genre.is_deleted = False
-            else:
-                artist_genre.is_deleted = True
-            artist_genre.save()
-        else:
-            raise ValueError("Artist genre not found")
-        return artist_genre
+
+    @staticmethod
+    def delete_all(artist_id: int) -> None:
+        """
+        Delete all artist genres
+        :param artist_id: The artist ID
+        """
+        artist_genres = ArtistGenre.query.filter_by(artist_id=artist_id).all()
+        for artist_genre in artist_genres:
+            artist_genre.delete()
+        return None

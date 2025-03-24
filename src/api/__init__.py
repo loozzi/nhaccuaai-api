@@ -11,10 +11,13 @@ api = Api(
     doc="/docs/",
 )
 
+
 # Define namespaces
+from .artist import artist_ns
 from .auth import auth_ns
 from .genre import genre_ns
 
 # Import namespaces
 api.add_namespace(auth_ns)
 api.add_namespace(genre_ns)
+api.add_namespace(artist_ns)

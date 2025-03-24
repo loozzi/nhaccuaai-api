@@ -14,6 +14,13 @@ class FavouriteArtist(Base):
     )
 
     def __init__(self, user_id: int, artist_id: int) -> "FavouriteArtist":
+        exists = (
+            self.query.filter_by(user_id=user_id).filter_by(artist_id=artist_id).first()
+        )
+        if exists:
+            exists.is_deleted = False
+            exists.save()
+            return exists
         self.user_id = user_id
         self.artist_id = artist_id
         self.save()
@@ -49,3 +56,13 @@ class FavouriteArtist(Base):
             return favourite_artist
         else:
             raise Exception("Favourite artist not found")
+
+    def delete_all(self, artist_id: int) -> None:
+        """
+        Delete all favourite artists of an artist
+        :param artist_id: The artist ID
+        """
+        favourite_artists = self.query.filter_by(artist_id=artist_id).all()
+        for favourite_artist in favourite_artists:
+            favourite_artist.delete()
+        return None

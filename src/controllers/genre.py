@@ -15,6 +15,7 @@ class GenreController:
         :return: The genres
         """
         offset = (page - 1) * limit
+        # TODO: Handle return pagination form
         return self.srv.get_all(limit, offset, keyword)
 
     def get_by_id(self, id: int) -> Genre:
@@ -23,6 +24,7 @@ class GenreController:
         :param id: The genre ID
         :return: The genre
         """
+        # TODO: Query list artists of genre
         return self.srv.get_by_id(id)
 
     def store(self, data: dict) -> Genre:
