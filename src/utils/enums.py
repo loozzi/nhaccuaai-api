@@ -7,3 +7,12 @@ class UserRole(Enum):
     MODERATOR = "moderator"
     ARTIST = "artist"
     GUEST = "guest"
+
+
+class TrackType(Enum):
+    TRACK = "track"
+    PODCAST = "podcast"
+    EPISODE = "episode"
+    LIVE = "live"
+    REMIX = "remix"
+    OTHER = "other"

@@ -4,4 +4,6 @@ from .Artist import Artist
 from .ArtistGenre import ArtistGenre
 from .FavouriteArtist import FavouriteArtist
 from .Genre import Genre
+from .Track import Track
+from .TrackArtist import TrackArtist
 from .User import User
