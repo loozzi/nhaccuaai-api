@@ -28,6 +28,8 @@ class ArtistService:
         :return: The artist
         """
         artist = Artist.query.get(id)
+        if not artist:
+            raise ValueError("Artist not found")
         return artist.__str__()
 
     def store(self, data: dict) -> Artist:

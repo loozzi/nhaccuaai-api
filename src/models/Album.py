@@ -1,7 +1,7 @@
 import datetime
 
 from sqlalchemy import TIMESTAMP, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .Base import Base
 
@@ -13,6 +13,7 @@ class Album(Base):
     permalink: Mapped[str] = mapped_column(String(255))
     album_type: Mapped[str] = mapped_column(String(255))
     release_date: Mapped[datetime.datetime] = mapped_column(TIMESTAMP)
+    artists = relationship("AlbumArtist", back_populates="album")
 
     def __init__(
         self,

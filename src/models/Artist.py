@@ -1,5 +1,5 @@
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .Base import Base
 
@@ -10,6 +10,7 @@ class Artist(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     image: Mapped[str] = mapped_column(String(1024), nullable=True)
     permalink: Mapped[str] = mapped_column(String(255), nullable=False)
+    albums = relationship("AlbumArtist", back_populates="artist")
 
     def __init__(self, name: str, image: str, permalink: str) -> "Artist":
         self.name = name
