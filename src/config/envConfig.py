@@ -11,3 +11,5 @@ class EnvironmentConfig:
         self.JWT_SECRET = os.getenv("JWT_SECRET")
         self.JWT_EXP_SECONDS = int(os.getenv("JWT_EXP_SECONDS"))
         self.JWT_REFRESH_EXP_DAYS = int(os.getenv("JWT_REFRESH_EXP_DAYS"))
+        self.SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
+        self.SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")

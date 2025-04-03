@@ -11,3 +11,7 @@ PyJWT
 psycopg2
 google-cloud-datastore==2.15.1
 google-auth==2.17.3
+requests
+youtube_search
+yt_dlp
+eyed3

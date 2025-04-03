@@ -14,6 +14,7 @@ class Album(Base):
     album_type: Mapped[str] = mapped_column(String(255))
     release_date: Mapped[datetime.datetime] = mapped_column(TIMESTAMP)
     artists = relationship("AlbumArtist", back_populates="album")
+    tracks = relationship("Track", back_populates="album")
 
     def __init__(
         self,
