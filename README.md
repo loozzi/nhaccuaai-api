@@ -1,1 +1,3 @@
-The syntax of the command is incorrect.
+## NHACCUAAI API
+
+Author: Loozzi
