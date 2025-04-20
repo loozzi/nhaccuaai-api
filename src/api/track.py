@@ -1,6 +1,6 @@
 from flask_restx import Namespace, Resource, fields
 
-from src.controllers import AlbumController, ArtistController, TrackController
+from src.controllers import TrackController
 from src.utils import pagination_parser, response
 from src.utils.enums import TrackType
 
@@ -129,17 +129,12 @@ class CrawlerApi(Resource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.ctl: TrackController = TrackController()
-        self.album_ctl: AlbumController = AlbumController()
-        self.artist_ctl: ArtistController = ArtistController()
 
     @track_ns.response(200, "Success")
     @track_ns.response(400, "Bad Request")
     def get(self, link: str):
-        try:
-            track_data = self.ctl.crawl(link)
+        # try:
+        return response(200, "Success", self.ctl.crawl(link))
 
-            # self.ctl.store(track_data)
-
-            return response(200, "Success", track_data)
-        except Exception as e:
-            return response(400, str(e))
+    # except Exception as e:
+    #     return response(400, str(e))

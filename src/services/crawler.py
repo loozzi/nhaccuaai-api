@@ -2,7 +2,6 @@ import datetime
 import os
 
 import eyed3
-import eyed3.id3
 import requests
 import requests as req
 import spotipy
@@ -11,6 +10,16 @@ from spotipy.oauth2 import SpotifyClientCredentials
 from youtube_search import YoutubeSearch
 
 from src import env
+from src.models import (
+    Album,
+    AlbumArtist,
+    Artist,
+    ArtistGenre,
+    Genre,
+    Track,
+    TrackArtist,
+)
+from src.utils import gen_permalink
 
 
 class Song:
@@ -32,7 +41,7 @@ class Song:
         self.duration_to_seconds = int(self.duration / 1000)
         self.album_cover = self.spotify["album"]["images"][0]["url"]
         self.path = "./songs"
-        self.file = f"{self.path}/{self.track_name} - {self.artist_name}.mp3"
+        self.file = f"{self.path}/{self.id}.mp3"
         self.uri = self.spotify["uri"]
 
     def features(self):
@@ -93,7 +102,7 @@ class Song:
             # PERMANENT options
             "format": "bestaudio/best",
             "keepvideo": False,
-            "outtmpl": f"{self.path}/{self.track_name} - {self.artist_name}",
+            "outtmpl": self.file.replace(".mp3", ""),
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
@@ -191,7 +200,8 @@ class Crawler:
             "type": song["type"],
             "release_date": song["album"]["release_date"],
             "track_number": song["track_number"],
-            "file_url": file_url,
+            "file_url": file_url.split("\\")[-1],
+            "image": song["album"]["images"][0]["url"],
         }
 
     def artist_info(self, id: str) -> dict:
@@ -207,7 +217,7 @@ class Crawler:
         return {
             "id": artist["id"],
             "name": artist["name"],
-            "images": artist["images"][0]["url"],
+            "image": artist["images"][0]["url"],
             "genres": artist["genres"],
         }
 
@@ -241,3 +251,90 @@ class Crawler:
         )
         sp = spotipy.Spotify(auth_manager=auth_manager)
         return sp
+
+
+class CrawlerService:
+    def __init__(self):
+        pass
+
+    def store_track(self, data: dict):
+        """
+        Store the track
+        :param data: The track data
+        :return: The track
+        """
+        track = Track.query.filter_by(permalink=data["permalink"]).first()
+        if not track:
+            data["release_date"] = datetime.datetime.strptime(
+                data["release_date"], "%Y-%m-%d"
+            ).date()
+            track = Track(
+                data["album_id"],
+                data["name"],
+                data["file_url"],
+                data["duration"],
+                data["permalink"],
+                data["type"],
+                data["release_date"],
+                data["track_number"],
+                data["image"],
+            )
+
+        for artist in data["artists"]:
+            artist_obj = Artist.query.filter_by(permalink=artist["permalink"]).first()
+            if artist_obj:
+                TrackArtist(track.id, artist_obj.id)
+
+        return track.__str__()
+
+    def store_album(self, data: dict):
+        """
+        Store the album
+        :param data: The album data
+        :return: The album
+        """
+        album = Album.query.filter_by(permalink=data["permalink"]).first()
+        if not album:
+            album = Album(
+                data["name"],
+                data["image"],
+                data["permalink"],
+                data["album_type"],
+                data["release_date"],
+            )
+
+        for artist in data["artists"]:
+            artist_id = Artist.query.filter_by(permalink=artist["permalink"]).first().id
+            AlbumArtist(album.id, artist_id)
+        return album.__str__()
+
+    def store_artist(self, data: dict):
+        """
+        Store the artist
+        :param data: The artist data
+        :return: The artist
+        """
+        artist = Artist.query.filter_by(permalink=data["permalink"]).first()
+        if not artist:
+            artist = Artist(data["name"], data["image"], data["permalink"])
+
+        for genre_id in data["genres"]:
+            ArtistGenre(artist.id, genre_id)
+
+        return artist.__str__()
+
+    def store_genres(self, genres: list[str]) -> list[int]:
+        """
+        Store the genres
+        :param genres: The genres
+        :return: The genres
+        """
+        list_genre_ids = []
+        for genre_name in genres:
+            genre = Genre.query.filter_by(name=genre_name).first()
+            if not genre:
+                genre = Genre(genre_name, gen_permalink())
+
+            list_genre_ids.append(genre.id)
+
+        return list_genre_ids

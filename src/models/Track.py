@@ -3,7 +3,7 @@ import datetime
 from sqlalchemy import TIMESTAMP, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.utils.enums import TrackType
+from src.utils.enums import TrackType, track_type_enum
 
 from .Base import Base
 
@@ -40,7 +40,7 @@ class Track(Base):
         self.file_url = file_url
         self.duration = duration
         self.permalink = permalink
-        self.type = type
+        self.type = track_type_enum[type]
         self.release_date = release_date
         self.track_number = track_number
         self.image = image

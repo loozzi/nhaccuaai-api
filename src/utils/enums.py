@@ -16,3 +16,13 @@ class TrackType(Enum):
     LIVE = "live"
     REMIX = "remix"
     OTHER = "other"
+
+
+track_type_enum = {
+    "track": TrackType.TRACK,
+    "podcast": TrackType.PODCAST,
+    "episode": TrackType.EPISODE,
+    "live": TrackType.LIVE,
+    "remix": TrackType.REMIX,
+    "other": TrackType.OTHER,
+}

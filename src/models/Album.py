@@ -29,3 +29,5 @@ class Album(Base):
         self.permalink = permalink
         self.album_type = album_type
         self.release_date = release_date
+        self.save()
+        return self
