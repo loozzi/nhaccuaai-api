@@ -1,100 +1,67 @@
-from flask_restx import Namespace, Resource, fields
+from fastapi import APIRouter
+from pydantic import BaseModel
 
 from src.controllers import AuthController
 from src.utils import response
 
-auth_ns = Namespace("auth", description="Authentication operations")
-
-signin_model = auth_ns.model(
-    "SignIn",
-    {
-        "token": fields.String(required=True, description="The token"),
-    },
-)
-
-signup_model = auth_ns.model(
-    "SignUp",
-    {
-        "token": fields.String(required=True, description="The token"),
-    },
-)
-
-refresh_token_model = auth_ns.model(
-    "RefreshToken",
-    {
-        "token": fields.String(required=True, description="The token"),
-    },
-)
-
-route = {
-    "sign-in": "/sign-in",
-    "sign-up": "/sign-up",
-    "refresh-token": "/refresh-token",
-}
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@auth_ns.route(route["sign-in"])
-class SignInApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl = AuthController()
-
-    @auth_ns.expect(signin_model)
-    @auth_ns.response(200, "Success")
-    @auth_ns.response(400, "Bad Request")
-    @auth_ns.response(401, "Unauthorized")
-    def post(self):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.sign_in(auth_ns.payload["token"]),
-            )
-        except ValueError as e:
-            return response(401, str(e))
-        except Exception as e:
-            return response(400, str(e))
+# Định nghĩa Pydantic models
+class TokenModel(BaseModel):
+    token: str
 
 
-@auth_ns.route(route["sign-up"])
-class SignUpApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl = AuthController()
-
-    @auth_ns.expect(signup_model)
-    @auth_ns.response(200, "Success")
-    @auth_ns.response(400, "Bad Request")
-    @auth_ns.response(401, "Unauthorized")
-    def post(self):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.sign_up(auth_ns.payload["token"]),
-            )
-        except Exception as e:
-            return response(400, str(e))
+@router.post("/sign-in")
+async def sign_in(token_data: TokenModel):
+    """
+    Đăng nhập với token
+    """
+    try:
+        ctl = AuthController()
+        result = ctl.sign_in(token_data.token)
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except ValueError as e:
+        return response(401, str(e))
+    except Exception as e:
+        return response(400, str(e))
 
 
-@auth_ns.route(route["refresh-token"])
-class RefreshTokenApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl = AuthController()
+@router.post("/sign-up")
+async def sign_up(token_data: TokenModel):
+    """
+    Đăng ký với token
+    """
+    try:
+        ctl = AuthController()
+        result = ctl.sign_up(token_data.token)
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except Exception as e:
+        return response(400, str(e))
 
-    @auth_ns.expect(refresh_token_model)
-    @auth_ns.response(200, "Success")
-    @auth_ns.response(400, "Bad Request")
-    @auth_ns.response(401, "Unauthorized")
-    def post(self):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.refresh_token(auth_ns.payload["token"]),
-            )
-        except ValueError as e:
-            return response(401, str(e))
-        except Exception as e:
-            return response(400, str(e))
+
+@router.post("/refresh-token")
+async def refresh_token(token_data: TokenModel):
+    """
+    Làm mới token
+    """
+    try:
+        ctl = AuthController()
+        result = ctl.refresh_token(token_data.token)
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except ValueError as e:
+        return response(401, str(e))
+    except Exception as e:
+        return response(400, str(e))

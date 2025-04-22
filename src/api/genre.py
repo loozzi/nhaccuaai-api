@@ -1,112 +1,111 @@
-from flask_restx import Namespace, Resource, fields
+from typing import Optional
+
+from fastapi import APIRouter, Body, Path, Query
+from pydantic import BaseModel
 
 from src.controllers import GenreController
-from src.utils import pagination_parser, response
+from src.utils import response
 
-genre_ns = Namespace("genre", description="Genre operations")
-
-genre_model = genre_ns.model(
-    "Genre",
-    {
-        "name": fields.String(required=True, description="The genre name"),
-        "permalink": fields.String(required=True, description="The genre permalink"),
-    },
-)
-
-genre_update_model = genre_ns.model(
-    "GenreUpdate",
-    {
-        "name": fields.String(description="The genre name"),
-        "permalink": fields.String(description="The genre permalink"),
-    },
-)
+router = APIRouter(prefix="/genre", tags=["genre"])
 
 
-@genre_ns.route("/")
-class GenreApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl = GenreController()
-
-    @genre_ns.expect(pagination_parser)
-    @genre_ns.response(200, "Success")
-    @genre_ns.response(400, "Bad Request")
-    @genre_ns.response(401, "Unauthorized")
-    def get(self):
-        try:
-            # Get parameters from request.args with default values
-            args = pagination_parser.parse_args()
-            limit = args.get("limit", 10)
-            page = args.get("page", 1)
-            keyword = args.get("keyword", "")
-            return response(
-                200,
-                "Success",
-                self.ctl.get_all(limit, page, keyword),
-            )
-        except Exception as e:
-            return response(400, str(e))
-
-    @genre_ns.expect(genre_model)
-    @genre_ns.response(200, "Success")
-    @genre_ns.response(400, "Bad Request")
-    @genre_ns.response(401, "Unauthorized")
-    def post(self):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.store(genre_ns.payload),
-            )
-        except Exception as e:
-            return response(400, str(e))
+# Định nghĩa Pydantic models
+class GenreCreate(BaseModel):
+    name: str
+    permalink: str
 
 
-@genre_ns.route("/<int:id>")
-class GenreWithIdApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl = GenreController()
+class GenreUpdate(BaseModel):
+    name: Optional[str] = None
+    permalink: Optional[str] = None
 
-    @genre_ns.response(200, "Success")
-    @genre_ns.response(400, "Bad Request")
-    @genre_ns.response(401, "Unauthorized")
-    @genre_ns.response(404, "Not Found")
-    def get(self, id):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.get_by_id(id),
-            )
-        except Exception as e:
-            return response(400, str(e))
 
-    @genre_ns.expect(genre_update_model)
-    @genre_ns.response(200, "Success")
-    @genre_ns.response(400, "Bad Request")
-    @genre_ns.response(401, "Unauthorized")
-    @genre_ns.response(404, "Not Found")
-    def put(self, id):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.update(id, genre_ns.payload),
-            )
-        except Exception as e:
-            return response(400, str(e))
+@router.get("/")
+async def get_genres(
+    limit: int = Query(10, description="Số lượng kết quả trả về"),
+    page: int = Query(1, description="Trang hiện tại"),
+    keyword: str = Query("", description="Từ khóa tìm kiếm"),
+):
+    """
+    Lấy danh sách thể loại
+    """
+    try:
+        ctl = GenreController()
+        result = ctl.get_all(limit, page, keyword)
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except Exception as e:
+        return response(400, str(e))
 
-    @genre_ns.response(200, "Success")
-    @genre_ns.response(400, "Bad Request")
-    @genre_ns.response(401, "Unauthorized")
-    @genre_ns.response(404, "Not Found")
-    def delete(self, id):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.destroy(id),
-            )
-        except Exception as e:
-            return response(400, str(e))
+
+@router.post("/")
+async def create_genre(genre: GenreCreate):
+    """
+    Tạo thể loại mới
+    """
+    try:
+        ctl = GenreController()
+        result = ctl.store(genre.model_dump())
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except Exception as e:
+        return response(400, str(e))
+
+
+@router.get("/{id}")
+async def get_genre(id: int = Path(..., description="ID của thể loại")):
+    """
+    Lấy thông tin thể loại theo ID
+    """
+    try:
+        ctl = GenreController()
+        result = ctl.get_by_id(id)
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except Exception as e:
+        return response(400, str(e))
+
+
+@router.put("/{id}")
+async def update_genre(
+    id: int = Path(..., description="ID của thể loại"), genre: GenreUpdate = Body(...)
+):
+    """
+    Cập nhật thông tin thể loại
+    """
+    try:
+        ctl = GenreController()
+        result = ctl.update(id, genre.model_dump(exclude_unset=True))
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except Exception as e:
+        return response(400, str(e))
+
+
+@router.delete("/{id}")
+async def delete_genre(id: int = Path(..., description="ID của thể loại")):
+    """
+    Xóa thể loại
+    """
+    try:
+        ctl = GenreController()
+        result = ctl.destroy(id)
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except Exception as e:
+        return response(400, str(e))
