@@ -1,6 +1,6 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Body, HTTPException, Path, Query
+from fastapi import APIRouter, Body, Path, Query
 from pydantic import BaseModel
 
 from src.controllers import GenreController
@@ -38,7 +38,7 @@ async def get_genres(
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.post("/")
@@ -55,7 +55,7 @@ async def create_genre(genre: GenreCreate):
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.get("/{id}")
@@ -72,7 +72,7 @@ async def get_genre(id: int = Path(..., description="ID của thể loại")):
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.put("/{id}")
@@ -91,7 +91,7 @@ async def update_genre(
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.delete("/{id}")
@@ -108,4 +108,4 @@ async def delete_genre(id: int = Path(..., description="ID của thể loại"))
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))

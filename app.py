@@ -2,6 +2,8 @@ import uvicorn
 
 from src import app, config
 
+app = app
+
 if __name__ == "__main__":
     if config.DEBUG:
         uvicorn.run(

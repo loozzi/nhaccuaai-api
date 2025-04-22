@@ -1,12 +1,11 @@
 from datetime import date
-from typing import Any, Dict, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Body, HTTPException, Path, Query
+from fastapi import APIRouter, Body, Path, Query
 from pydantic import BaseModel
 
 from src.controllers import TrackController
 from src.utils import response
-from src.utils.enums import TrackType
 
 router = APIRouter(prefix="/track", tags=["track"])
 
@@ -50,7 +49,7 @@ async def get_tracks(
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.post("/")
@@ -67,7 +66,7 @@ async def create_track(track: TrackCreate):
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.put("/{id}")
@@ -86,7 +85,7 @@ async def update_track(
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.delete("/{id}")
@@ -103,7 +102,7 @@ async def delete_track(id: int = Path(..., description="ID của bài hát")):
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.get("/crawl/{link}")
@@ -120,7 +119,7 @@ async def crawl_track(link: str = Path(..., description="Link bài hát cần cr
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.get("/by-permalink/{permalink}")
@@ -139,4 +138,4 @@ async def get_track_by_permalink(
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))

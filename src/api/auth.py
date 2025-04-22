@@ -1,6 +1,4 @@
-from typing import Any, Dict
-
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from src.controllers import AuthController
@@ -28,9 +26,9 @@ async def sign_in(token_data: TokenModel):
             result,
         )
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        return response(401, str(e))
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.post("/sign-up")
@@ -47,7 +45,7 @@ async def sign_up(token_data: TokenModel):
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.post("/refresh-token")
@@ -64,6 +62,6 @@ async def refresh_token(token_data: TokenModel):
             result,
         )
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        return response(401, str(e))
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))

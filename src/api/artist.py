@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Body, Depends, Path
 from pydantic import BaseModel
 
 from src.controllers import ArtistController
@@ -42,7 +42,7 @@ async def get_artists(pagination: PaginationParams = Depends()):
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.post("/")
@@ -59,7 +59,7 @@ async def create_artist(artist: ArtistCreate):
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.get("/{id}")
@@ -76,7 +76,7 @@ async def get_artist(id: int = Path(..., description="ID của nghệ sĩ")):
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.put("/{id}")
@@ -95,7 +95,7 @@ async def update_artist(
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
 
 
 @router.delete("/{id}")
@@ -112,4 +112,4 @@ async def delete_artist(id: int = Path(..., description="ID của nghệ sĩ")):
             result,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return response(400, str(e))
