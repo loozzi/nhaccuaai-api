@@ -1,116 +1,115 @@
-from flask_restx import Namespace, Resource, fields
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from pydantic import BaseModel
 
 from src.controllers import ArtistController
-from src.utils import pagination_parser, response
+from src.utils import PaginationParams, response
 
-artist_ns = Namespace("artist", description="Artist operations")
-
-artist_model = artist_ns.model(
-    "Artist",
-    {
-        "name": fields.String(required=True, description="The artist name"),
-        "image": fields.String(required=True, description="The artist image"),
-        "permalink": fields.String(required=True, description="The artist permalink"),
-        "genres": fields.List(fields.Integer, description="The artist genres id"),
-    },
-)
-
-artist_update_model = artist_ns.model(
-    "ArtistUpdate",
-    {
-        "name": fields.String(description="The artist name"),
-        "image": fields.String(description="The artist image"),
-        "permalink": fields.String(description="The artist permalink"),
-        "genres": fields.List(fields.Integer, description="The artist genres id"),
-    },
-)
+router = APIRouter(prefix="/artist", tags=["artist"])
 
 
-@artist_ns.route("/")
-class ArtistApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl = ArtistController()
-
-    @artist_ns.expect(pagination_parser)
-    @artist_ns.response(200, "Success")
-    @artist_ns.response(400, "Bad Request")
-    @artist_ns.response(401, "Unauthorized")
-    def get(self):
-        try:
-            # Get parameters from request.args with default values
-            args = pagination_parser.parse_args()
-            limit = args.get("limit", 10)
-            page = args.get("page", 1)
-            keyword = args.get("keyword", "")
-            return response(
-                200,
-                "Success",
-                self.ctl.get_all(limit, page, keyword),
-            )
-        except Exception as e:
-            return response(400, str(e))
-
-    @artist_ns.expect(artist_model)
-    @artist_ns.response(200, "Success")
-    @artist_ns.response(400, "Bad Request")
-    @artist_ns.response(401, "Unauthorized")
-    def post(self):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.store(artist_ns.payload),
-            )
-        except Exception as e:
-            return response(400, str(e))
+# Định nghĩa Pydantic models thay vì flask-restx models
+class GenreList(BaseModel):
+    genres: Optional[List[int]] = None
 
 
-@artist_ns.route("/<int:id>")
-class ArtistWithIdApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl = ArtistController()
+class ArtistCreate(BaseModel):
+    name: str
+    image: str
+    permalink: str
+    genres: Optional[List[int]] = None
 
-    @artist_ns.response(200, "Success")
-    @artist_ns.response(400, "Bad Request")
-    @artist_ns.response(401, "Unauthorized")
-    @artist_ns.response(404, "Not Found")
-    def get(self, id):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.get_by_id(id),
-            )
-        except Exception as e:
-            return response(400, str(e))
 
-    @artist_ns.expect(artist_update_model)
-    @artist_ns.response(200, "Success")
-    @artist_ns.response(400, "Bad Request")
-    @artist_ns.response(401, "Unauthorized")
-    def put(self, id: int):
-        # try:
+class ArtistUpdate(BaseModel):
+    name: Optional[str] = None
+    image: Optional[str] = None
+    permalink: Optional[str] = None
+    genres: Optional[List[int]] = None
+
+
+@router.get("/")
+async def get_artists(pagination: PaginationParams = Depends()):
+    """
+    Lấy danh sách nghệ sĩ
+    """
+    try:
+        ctl = ArtistController()
+        result = ctl.get_all(pagination.limit, pagination.page, pagination.keyword)
         return response(
             200,
             "Success",
-            self.ctl.update(id, artist_ns.payload),
+            result,
         )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    # except Exception as e:
-    #     return response(400, str(e))
 
-    @artist_ns.response(200, "Success")
-    @artist_ns.response(400, "Bad Request")
-    @artist_ns.response(401, "Unauthorized")
-    @artist_ns.response(404, "Not Found")
-    def delete(self, id: int):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.destroy(id),
-            )
-        except Exception as e:
-            return response(400, str(e))
+@router.post("/")
+async def create_artist(artist: ArtistCreate):
+    """
+    Tạo nghệ sĩ mới
+    """
+    try:
+        ctl = ArtistController()
+        result = ctl.store(artist.model_dump())
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/{id}")
+async def get_artist(id: int = Path(..., description="ID của nghệ sĩ")):
+    """
+    Lấy thông tin nghệ sĩ theo ID
+    """
+    try:
+        ctl = ArtistController()
+        result = ctl.get_by_id(id)
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/{id}")
+async def update_artist(
+    id: int = Path(..., description="ID của nghệ sĩ"), artist: ArtistUpdate = Body(...)
+):
+    """
+    Cập nhật thông tin nghệ sĩ
+    """
+    try:
+        ctl = ArtistController()
+        result = ctl.update(id, artist.model_dump(exclude_unset=True))
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/{id}")
+async def delete_artist(id: int = Path(..., description="ID của nghệ sĩ")):
+    """
+    Xóa nghệ sĩ
+    """
+    try:
+        ctl = ArtistController()
+        result = ctl.destroy(id)
+        return response(
+            200,
+            "Success",
+            result,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

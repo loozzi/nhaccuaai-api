@@ -1,11 +1,7 @@
-from flask_restx import reqparse
-
-pagination_parser = reqparse.RequestParser()
-pagination_parser.add_argument(
-    "limit", type=int, default=10, help="Number of items per page"
-)
-pagination_parser.add_argument("page", type=int, default=1, help="Page number")
-pagination_parser.add_argument("keyword", type=str, default="", help="Search keyword")
+"""
+File này không còn cần thiết vì FastAPI đã có cơ chế xử lý query params riêng.
+Tuy nhiên giữ lại hàm pagination_response để sử dụng trong các controllers.
+"""
 
 
 def pagination_response(data, limit, page, total):
