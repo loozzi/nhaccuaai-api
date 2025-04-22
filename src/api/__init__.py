@@ -1,27 +1,17 @@
-from flask import Blueprint
-from flask_restx import Api
+from fastapi import APIRouter
 
-__api = Blueprint("api", __name__, url_prefix="/api")
+router = APIRouter()
 
-api = Api(
-    __api,
-    version="1.0",
-    title="NhacCuaAi API",
-    description="NhacCuaAi API Documentation",
-    doc="/docs/",
-)
+# Import các router modules
+from .album import router as album_router
+from .artist import router as artist_router
+from .auth import router as auth_router
+from .genre import router as genre_router
+from .track import router as track_router
 
-
-# Define namespaces
-from .album import album_ns
-from .artist import artist_ns
-from .auth import auth_ns
-from .genre import genre_ns
-from .track import track_ns
-
-# Import namespaces
-api.add_namespace(auth_ns)
-api.add_namespace(genre_ns)
-api.add_namespace(artist_ns)
-api.add_namespace(album_ns)
-api.add_namespace(track_ns)
+# Đăng ký các router
+router.include_router(auth_router, prefix="/auth", tags=["auth"])
+router.include_router(genre_router, prefix="/genre", tags=["genre"])
+router.include_router(artist_router, prefix="/artist", tags=["artist"])
+router.include_router(album_router, prefix="/album", tags=["album"])
+router.include_router(track_router, prefix="/track", tags=["track"])

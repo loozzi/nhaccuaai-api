@@ -1,46 +1,45 @@
 import datetime
-
-from sqlalchemy import TIMESTAMP, Boolean, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import TIMESTAMP, Boolean, Integer, Column
 from sqlalchemy.sql import func
 
-from src import db
+from src import Base
 
-
-class Base(db.Model):
+class BaseModel(Base):
     __abstract__ = True
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime.datetime] = mapped_column(
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    created_at = Column(
         TIMESTAMP, server_default=func.current_timestamp(), nullable=False
     )
-    updated_at: Mapped[datetime.date] = mapped_column(
+    updated_at = Column(
         TIMESTAMP,
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
         nullable=False,
     )
 
-    def delete(self):
+    def delete(self, db):
         self.is_deleted = True
-        db.session.commit()
+        db.commit()
         return self
 
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
+    def save(self, db):
+        db.add(self)
+        db.commit()
+        db.refresh(self)
         return self
 
-    def update(self, **kwargs):
+    def update(self, db, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-        db.session.commit()
+        db.commit()
+        db.refresh(self)
         return self
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.id}>"
 
-    def __str__(self):
+    def to_dict(self):
         def format_value(value):
             if hasattr(value, "value"):
                 return value.value

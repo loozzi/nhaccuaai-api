@@ -1,24 +1,23 @@
 import datetime
 
-from sqlalchemy import TIMESTAMP, Enum, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import TIMESTAMP, Column, Enum, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 
 from src.utils.enums import TrackType, track_type_enum
+from .Base import BaseModel
 
-from .Base import Base
 
-
-class Track(Base):
+class Track(BaseModel):
     __tablename__ = "tracks"
-    album_id: Mapped[int] = mapped_column(Integer, ForeignKey("albums.id"))
-    name: Mapped[str] = mapped_column(String, nullable=False)
-    file_url: Mapped[str] = mapped_column(String, nullable=False)
-    duration: Mapped[int] = mapped_column(Integer, nullable=False)
-    image: Mapped[str] = mapped_column(String)
-    permalink: Mapped[str] = mapped_column(String, nullable=False)
-    type: Mapped[str] = mapped_column(Enum(TrackType), default=TrackType.OTHER.value)
-    release_date: Mapped[datetime.date] = mapped_column(TIMESTAMP)
-    track_number: Mapped[int] = mapped_column(Integer)
+    album_id = Column(Integer, ForeignKey("albums.id"))
+    name = Column(String, nullable=False)
+    file_url = Column(String, nullable=False)
+    duration = Column(Integer, nullable=False)
+    image = Column(String)
+    permalink = Column(String, nullable=False)
+    type = Column(Enum(TrackType), default=TrackType.OTHER.value)
+    release_date = Column(TIMESTAMP)
+    track_number = Column(Integer)
 
     album = relationship("Album", back_populates="tracks")
     artists = relationship("TrackArtist", back_populates="track")
@@ -44,5 +43,3 @@ class Track(Base):
         self.release_date = release_date
         self.track_number = track_number
         self.image = image
-        self.save()
-        return self

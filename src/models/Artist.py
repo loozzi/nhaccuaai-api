@@ -1,24 +1,22 @@
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Column, String
+from sqlalchemy.orm import relationship
 
-from .Base import Base
+from .Base import BaseModel
 
 
-class Artist(Base):
+class Artist(BaseModel):
     __tablename__ = "artists"
 
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    image: Mapped[str] = mapped_column(String(1024), nullable=True)
-    permalink: Mapped[str] = mapped_column(String(255), nullable=False)
+    name = Column(String(255), nullable=False)
+    image = Column(String(1024), nullable=True)
+    permalink = Column(String(255), nullable=False)
     albums = relationship("AlbumArtist", back_populates="artist")
     tracks = relationship("TrackArtist", back_populates="artist")
 
-    def __init__(self, name: str, image: str, permalink: str) -> "Artist":
+    def __init__(self, name: str, image: str, permalink: str):
         self.name = name
         self.image = image
         self.permalink = permalink
-        self.save()
-        return self
 
     def __repr__(self):
         return f"<Artist {self.name}>"

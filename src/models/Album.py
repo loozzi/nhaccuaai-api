@@ -1,18 +1,18 @@
 import datetime
 
-from sqlalchemy import TIMESTAMP, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import TIMESTAMP, Column, String
+from sqlalchemy.orm import relationship
 
-from .Base import Base
+from .Base import BaseModel
 
 
-class Album(Base):
+class Album(BaseModel):
     __tablename__ = "albums"
-    name: Mapped[str] = mapped_column(String(255))
-    image: Mapped[str] = mapped_column(String(1023))
-    permalink: Mapped[str] = mapped_column(String(255))
-    album_type: Mapped[str] = mapped_column(String(255))
-    release_date: Mapped[datetime.datetime] = mapped_column(TIMESTAMP)
+    name = Column(String(255))
+    image = Column(String(1023))
+    permalink = Column(String(255))
+    album_type = Column(String(255))
+    release_date = Column(TIMESTAMP)
     artists = relationship("AlbumArtist", back_populates="album")
     tracks = relationship("Track", back_populates="album")
 
@@ -29,5 +29,3 @@ class Album(Base):
         self.permalink = permalink
         self.album_type = album_type
         self.release_date = release_date
-        self.save()
-        return self

@@ -1,140 +1,145 @@
-from flask_restx import Namespace, Resource, fields
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import List, Optional
+from datetime import date
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
+from src import get_db
 from src.controllers import TrackController
-from src.utils import pagination_parser, response
 from src.utils.enums import TrackType
 
-track_ns = Namespace("track", description="Track operations")
+router = APIRouter()
 
-track_model = track_ns.model(
-    "Track",
-    {
-        "name": fields.String(required=True, description="The track name"),
-        "file_url": fields.String(required=True, description="The track file URL"),
-        "duration": fields.Integer(required=True, description="The track duration"),
-        "permalink": fields.String(required=True, description="The track permalink"),
-        "type": fields.String(
-            description="The track type", enum=[e.value for e in TrackType]
-        ),
-        "release_date": fields.Date(description="The track release date"),
-        "track_number": fields.Integer(description="The track number"),
-    },
-)
+# Định nghĩa các Pydantic models 
+class TrackBase(BaseModel):
+    name: str = Field(..., description="The track name")
+    file_url: str = Field(..., description="The track file URL")
+    duration: int = Field(..., description="The track duration")
+    permalink: str = Field(..., description="The track permalink")
+    type: Optional[str] = Field(None, description="The track type")
+    release_date: Optional[date] = Field(None, description="The track release date")
+    track_number: Optional[int] = Field(None, description="The track number")
 
-track_update_model = track_ns.model(
-    "TrackUpdate",
-    {
-        "name": fields.String(description="The track name"),
-        "file_url": fields.String(description="The track file URL"),
-        "duration": fields.Integer(description="The track duration"),
-        "permalink": fields.String(description="The track permalink"),
-        "type": fields.String(
-            description="The track type", enum=[e.value for e in TrackType]
-        ),
-        "release_date": fields.Date(description="The track release date"),
-        "track_number": fields.Integer(description="The track number"),
-    },
-)
+    class Config:
+        orm_mode = True
 
+class TrackCreate(TrackBase):
+    pass
 
-@track_ns.route("/")
-class TrackApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl = TrackController()
+class TrackUpdate(BaseModel):
+    name: Optional[str] = Field(None, description="The track name")
+    file_url: Optional[str] = Field(None, description="The track file URL")
+    duration: Optional[int] = Field(None, description="The track duration")
+    permalink: Optional[str] = Field(None, description="The track permalink")
+    type: Optional[str] = Field(None, description="The track type")
+    release_date: Optional[date] = Field(None, description="The track release date")
+    track_number: Optional[int] = Field(None, description="The track number")
 
-    @track_ns.expect(pagination_parser)
-    @track_ns.response(200, "Success")
-    @track_ns.response(400, "Bad Request")
-    def get(self):
-        try:
-            args = pagination_parser.parse_args()
-            limit = args.get("limit", 10)
-            page = args.get("page", 1)
-            keyword = args.get("keyword", "")
-            return response(
-                200,
-                "Success",
-                self.ctl.get_all(limit, page, keyword),
-            )
-        except Exception as e:
-            return response(400, str(e))
+    class Config:
+        orm_mode = True
 
-    @track_ns.expect(track_model)
-    @track_ns.response(200, "Success")
-    @track_ns.response(400, "Bad Request")
-    def post(self):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.store(track_ns.payload),
-            )
-        except Exception as e:
-            return response(400, str(e))
+class TrackResponse(BaseModel):
+    status: int
+    message: str
+    data: Optional[dict] = None
 
+@router.get("/", response_model=TrackResponse)
+def get_tracks(
+    limit: int = Query(10, description="Limit per page"),
+    page: int = Query(1, description="Page number"),
+    keyword: str = Query("", description="Search keyword"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all tracks with pagination
+    """
+    try:
+        controller = TrackController()
+        result = controller.get_all(limit, page, keyword, db)
+        return {
+            "status": 200,
+            "message": "Success",
+            "data": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-@track_ns.route("/<int:id>")
-class TrackWithIdApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl: TrackController = TrackController()
+@router.post("/", response_model=TrackResponse)
+def create_track(track: TrackCreate, db: Session = Depends(get_db)):
+    """
+    Create a new track
+    """
+    try:
+        controller = TrackController()
+        result = controller.store(track.dict(), db)
+        return {
+            "status": 200,
+            "message": "Success",
+            "data": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    @track_ns.response(200, "Success")
-    @track_ns.response(400, "Bad Request")
-    def put(self, id: int):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.update(id, track_ns.payload),
-            )
-        except Exception as e:
-            return response(400, str(e))
+@router.put("/{id}", response_model=TrackResponse)
+def update_track(id: int, track: TrackUpdate, db: Session = Depends(get_db)):
+    """
+    Update a track
+    """
+    try:
+        controller = TrackController()
+        result = controller.update(id, track.dict(exclude_unset=True), db)
+        return {
+            "status": 200,
+            "message": "Success",
+            "data": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    @track_ns.response(200, "Success")
-    @track_ns.response(400, "Bad Request")
-    def delete(self, id: int):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.destroy(id),
-            )
-        except Exception as e:
-            return response(400, str(e))
+@router.delete("/{id}", response_model=TrackResponse)
+def delete_track(id: int, db: Session = Depends(get_db)):
+    """
+    Delete a track
+    """
+    try:
+        controller = TrackController()
+        result = controller.destroy(id, db)
+        return {
+            "status": 200,
+            "message": "Success",
+            "data": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
+@router.get("/{permalink}", response_model=TrackResponse)
+def get_track_by_permalink(permalink: str, db: Session = Depends(get_db)):
+    """
+    Get a track by permalink
+    """
+    try:
+        controller = TrackController()
+        result = controller.get_by_permalink(permalink, db)
+        return {
+            "status": 200,
+            "message": "Success",
+            "data": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-@track_ns.route("/<string:permalink>")
-class TrackWithPermalinkApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl: TrackController = TrackController()
-
-    @track_ns.response(200, "Success")
-    @track_ns.response(400, "Bad Request")
-    def get(self, permalink: str):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.get_by_permalink(permalink),
-            )
-        except Exception as e:
-            return response(400, str(e))
-
-
-@track_ns.route("/crawl/<string:link>")
-class CrawlerApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl: TrackController = TrackController()
-
-    @track_ns.response(200, "Success")
-    @track_ns.response(400, "Bad Request")
-    def get(self, link: str):
-        # try:
-        return response(200, "Success", self.ctl.crawl(link))
-
-    # except Exception as e:
-    #     return response(400, str(e))
+@router.get("/crawl/{link}", response_model=TrackResponse)
+def crawl_track(link: str, db: Session = Depends(get_db)):
+    """
+    Crawl a track from a link
+    """
+    try:
+        controller = TrackController()
+        result = controller.crawl(link, db)
+        return {
+            "status": 200,
+            "message": "Success",
+            "data": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

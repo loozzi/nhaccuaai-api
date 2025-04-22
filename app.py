@@ -1,13 +1,6 @@
-from src import app, config
+from src import app
+
+import uvicorn
 
 if __name__ == "__main__":
-    if config.DEBUG:
-        app.run(
-            debug=config.DEBUG,
-            host=config.HOST,
-            port=config.PORT,
-            use_reloader=True,
-            extra_files=["./src"],
-        )
-    else:
-        app.run(use_reloader=True, extra_files=["./src"])
+    uvicorn.run("src:app", host="0.0.0.0", port=8000, reload=True)

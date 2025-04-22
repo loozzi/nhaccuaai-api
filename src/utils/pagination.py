@@ -1,14 +1,17 @@
-from flask_restx import reqparse
+from typing import List, Dict, Any
+from fastapi import Query
 
-pagination_parser = reqparse.RequestParser()
-pagination_parser.add_argument(
-    "limit", type=int, default=10, help="Number of items per page"
-)
-pagination_parser.add_argument("page", type=int, default=1, help="Page number")
-pagination_parser.add_argument("keyword", type=str, default="", help="Search keyword")
+# Không cần pagination parser trong FastAPI vì chúng ta có thể dùng Query parameters trực tiếp trong các endpoint
 
-
-def pagination_response(data, limit, page, total):
+def pagination_response(data: List[Any], limit: int, page: int, total: int) -> Dict:
+    """
+    Create a pagination response
+    :param data: The data
+    :param limit: The limit per page
+    :param page: The current page
+    :param total: The total number of items
+    :return: The pagination response
+    """
     return {
         "data": data,
         "meta": {

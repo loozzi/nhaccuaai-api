@@ -1,100 +1,68 @@
-from flask_restx import Namespace, Resource, fields
+from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
 
+from src import get_db
 from src.controllers import AuthController
-from src.utils import response
+from src.schemas.user import Token, UserLogin
+from src.utils.response import response
 
-auth_ns = Namespace("auth", description="Authentication operations")
+router = APIRouter()
 
-signin_model = auth_ns.model(
-    "SignIn",
-    {
-        "token": fields.String(required=True, description="The token"),
-    },
-)
+@router.post("/sign-in", response_model=dict)
+async def sign_in(token: str = Body(..., embed=True), db: Session = Depends(get_db)):
+    """
+    Đăng nhập với token
+    """
+    try:
+        controller = AuthController()
+        result = controller.sign_in(token, db)
+        return response(200, "Success", result)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-signup_model = auth_ns.model(
-    "SignUp",
-    {
-        "token": fields.String(required=True, description="The token"),
-    },
-)
+@router.post("/sign-up", response_model=dict)
+async def sign_up(token: str = Body(..., embed=True), db: Session = Depends(get_db)):
+    """
+    Đăng ký với token
+    """
+    try:
+        controller = AuthController()
+        result = controller.sign_up(token, db)
+        return response(200, "Success", result)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-refresh_token_model = auth_ns.model(
-    "RefreshToken",
-    {
-        "token": fields.String(required=True, description="The token"),
-    },
-)
+@router.post("/refresh-token", response_model=dict)
+async def refresh_token(token: str = Body(..., embed=True), db: Session = Depends(get_db)):
+    """
+    Làm mới token
+    """
+    try:
+        controller = AuthController()
+        result = controller.refresh_token(token, db)
+        return response(200, "Success", result)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-route = {
-    "sign-in": "/sign-in",
-    "sign-up": "/sign-up",
-    "refresh-token": "/refresh-token",
-}
-
-
-@auth_ns.route(route["sign-in"])
-class SignInApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl = AuthController()
-
-    @auth_ns.expect(signin_model)
-    @auth_ns.response(200, "Success")
-    @auth_ns.response(400, "Bad Request")
-    @auth_ns.response(401, "Unauthorized")
-    def post(self):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.sign_in(auth_ns.payload["token"]),
+@router.post("/login", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """
+    Đăng nhập để lấy access token
+    """
+    try:
+        controller = AuthController()
+        user = controller.authenticate_user(form_data.username, form_data.password, db)
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
             )
-        except ValueError as e:
-            return response(401, str(e))
-        except Exception as e:
-            return response(400, str(e))
-
-
-@auth_ns.route(route["sign-up"])
-class SignUpApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl = AuthController()
-
-    @auth_ns.expect(signup_model)
-    @auth_ns.response(200, "Success")
-    @auth_ns.response(400, "Bad Request")
-    @auth_ns.response(401, "Unauthorized")
-    def post(self):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.sign_up(auth_ns.payload["token"]),
-            )
-        except Exception as e:
-            return response(400, str(e))
-
-
-@auth_ns.route(route["refresh-token"])
-class RefreshTokenApi(Resource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ctl = AuthController()
-
-    @auth_ns.expect(refresh_token_model)
-    @auth_ns.response(200, "Success")
-    @auth_ns.response(400, "Bad Request")
-    @auth_ns.response(401, "Unauthorized")
-    def post(self):
-        try:
-            return response(
-                200,
-                "Success",
-                self.ctl.refresh_token(auth_ns.payload["token"]),
-            )
-        except ValueError as e:
-            return response(401, str(e))
-        except Exception as e:
-            return response(400, str(e))
+        
+        access_token = controller.create_access_token(data={"sub": user.email})
+        return {"access_token": access_token, "token_type": "bearer"}
