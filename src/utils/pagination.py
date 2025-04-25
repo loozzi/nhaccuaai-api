@@ -6,7 +6,7 @@ Tuy nhiên giữ lại hàm pagination_response để sử dụng trong các con
 
 def pagination_response(data, limit, page, total):
     return {
-        "data": data,
+        "items": data,
         "meta": {
             "limit": limit,
             "page": page,

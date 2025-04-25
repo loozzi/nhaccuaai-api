@@ -5,6 +5,17 @@ class GenreService:
     def __init__(self):
         pass
 
+    def count(self, keyword: str) -> int:
+        """
+        Count all genres
+        :param keyword: The keyword
+        """
+        return (
+            Genre.query.filter_by(is_deleted=False)
+            .filter(Genre.name.ilike("%{keyword}%".format(keyword=keyword)))
+            .count()
+        )
+
     def get_all(self, limit: int, offset: int, keyword: str) -> list:
         """
         Get all genres

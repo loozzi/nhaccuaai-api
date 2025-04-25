@@ -1,4 +1,5 @@
 from src.services import ArtistService, Crawler, CrawlerService, TrackService
+from src.utils.pagination import pagination_response
 
 
 class TrackController:
@@ -6,6 +7,7 @@ class TrackController:
         self.srv = TrackService()
         self.crawler = Crawler()
         self.artist_srv = ArtistService()
+        self.track_srv = TrackService()
         self.crawl_srv = CrawlerService()
 
     def get_all(self, limit: int, page: int, keyword: str) -> list:
@@ -16,8 +18,27 @@ class TrackController:
         :param keyword: The keyword
         :return: The tracks
         """
+        # TODO: Query type of track, e.g: album, single, popular, etc. Default is newest
         offset = (page - 1) * limit
-        return self.srv.get_all(limit, offset, keyword)
+        tracks = self.srv.get_all(limit, offset, keyword)
+
+        # tracks = list(map(lambda track: track.__str__(), tracks))
+        tracks_response = [
+            {
+                "id": track["id"],
+                "name": track["name"],
+                "image": track["image"],
+                "artist": self.track_srv.get_artists(track["id"])[0],
+                "permalink": track["permalink"],
+                "type": track["type"],
+                "duration": track["duration"],
+            }
+            for track in tracks
+        ]
+
+        total = self.srv.count(keyword)
+
+        return pagination_response(tracks_response, limit, page, total)
 
     def get_by_id(self, id: int) -> dict:
         """
@@ -25,7 +46,10 @@ class TrackController:
         :param id: The track ID
         :return: The track
         """
-        return self.srv.get_by_id(id)
+        track = self.srv.get_by_id(id)
+        track["artists"] = self.track_srv.get_artists(id)
+
+        return track
 
     def get_by_permalink(self, permalink: str) -> dict:
         """
@@ -33,7 +57,9 @@ class TrackController:
         :param permalink: The track permalink
         :return: The track
         """
-        return self.srv.get_by_permalink(permalink)
+        track = self.srv.get_by_permalink(permalink)
+        track["artists"] = self.track_srv.get_artists(track["id"])
+        return track
 
     def store(self, data: dict) -> dict:
         """

@@ -140,3 +140,29 @@ class ArtistService:
         :return: The genres
         """
         return ArtistGenre.get_artist_genres(artist_id)
+
+    def get_by_genre_id(self, genre_id: int) -> list:
+        """
+        Get all artists by genre ID
+        :param genre_id: The genre ID
+        :return: The artists
+        """
+
+        artist_genres = ArtistGenre.query.filter(ArtistGenre.genre_id == genre_id).all()
+
+        artists = map(
+            lambda artist_genre: Artist.query.get(artist_genre.artist_id),
+            artist_genres,
+        )
+        return [artist.__str__() for artist in artists if artist]
+
+    def count(self, keyword: str) -> int:
+        """
+        Count all artists
+        :param keyword: The keyword
+        :return: The count of artists
+        """
+        count = Artist.query.filter(
+            Artist.name.ilike("%{keyword}%".format(keyword=keyword))
+        ).count()
+        return count

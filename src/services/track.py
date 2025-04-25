@@ -6,6 +6,28 @@ class TrackService:
     def __init__(self):
         pass
 
+    def get_artists(self, track_id: int) -> list:
+        """
+        Get all artists of a track
+        :param track_id: The track ID
+        :return: The artists
+        """
+        artists = TrackArtist.query.filter_by(track_id=track_id).all()
+        if not artists:
+            return None
+        return [Artist.query.get(artist.artist_id) for artist in artists]
+
+    def count(self, keyword: str) -> int:
+        """
+        Count all tracks
+        :param keyword: The keyword
+        :return: The count of tracks
+        """
+        count = Track.query.filter(
+            Track.name.ilike("%{keyword}%".format(keyword=keyword))
+        ).count()
+        return count
+
     def get_all(self, limit: int, offset: int, keyword: str) -> list:
         """
         Get all tracks
@@ -43,6 +65,10 @@ class TrackService:
         track = Track.query.get(id)
         if not track:
             raise ValueError("Track not found")
+
+        track_artists = TrackArtist.query.filter_by(track_id=id).all()
+        if track_artists:
+            track.artists = self.get_artists(track_artists)
         return track.__str__()
 
     def store(self, data: dict) -> Track:
@@ -135,3 +161,21 @@ class TrackService:
             track_artist.delete()
         track.delete()
         return None
+
+    def get_by_album_id(self, id: int) -> list:
+        """
+        Get all tracks by album ID
+        :param id: The album ID
+        :return: The tracks
+        """
+        tracks = Track.query.filter_by(album_id=id).all()
+        return [track.__str__() for track in tracks]
+
+    def get_by_artist_id(self, id: int) -> list:
+        """
+        Get all tracks by artist ID
+        :param id: The artist ID
+        :return: The tracks
+        """
+        tracks = Track.query.join(TrackArtist).filter(TrackArtist.artist_id == id).all()
+        return [track.__str__() for track in tracks]

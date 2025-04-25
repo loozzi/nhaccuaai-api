@@ -1,11 +1,14 @@
 import datetime
 
 from src.services.album import AlbumService
+from src.services.track import TrackService
+from src.utils.pagination import pagination_response
 
 
 class AlbumController:
     def __init__(self):
         self.album_service: AlbumService = AlbumService()
+        self.track_service: TrackService = TrackService()
 
     def get_all(self, limit: int, offset: int, keyword: str) -> list:
         """
@@ -15,7 +18,21 @@ class AlbumController:
         :param keyword: The keyword
         :return: The albums
         """
-        return self.album_service.get_all(limit, offset, keyword)
+        albums = self.album_service.get_all(limit, offset, keyword)
+        albums_response = [
+            {
+                "id": album["id"],
+                "name": album["name"],
+                "image": album["image"],
+                "artist": self.album_service.get_artists(album["id"])[0],
+                "permalink": album["permalink"],
+                "type": album["album_type"],
+                "duration": 0,
+            }
+            for album in albums
+        ]
+        total = self.album_service.count(keyword)
+        return pagination_response(albums_response, limit, offset, total)
 
     def get_by_id(self, id: int) -> dict:
         """
@@ -23,7 +40,25 @@ class AlbumController:
         :param id: The album ID
         :return: The album
         """
-        return self.album_service.get_by_id(id)
+        album = self.album_service.get_by_id(id)
+        album["artists"] = list(set(self.album_service.get_artists(id)))
+        tracks = [
+            {
+                "id": track["id"],
+                "name": track["name"],
+                "image": track["image"],
+                "artist": self.track_service.get_artists(track["id"])[0],
+                "permalink": track["permalink"],
+                "type": track["type"],
+                "duration": track["duration"],
+            }
+            for track in self.track_service.get_by_album_id(id)
+        ]
+
+        if not tracks:
+            raise ValueError("Album not found")
+        album["tracks"] = tracks
+        return album
 
     def store(self, data: dict) -> dict:
         """

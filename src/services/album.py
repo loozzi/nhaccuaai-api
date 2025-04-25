@@ -19,7 +19,6 @@ class AlbumService:
             .offset(offset)
             .all()
         )
-        print(albums)
         return [album.__str__() for album in albums]
 
     def get_by_id(self, id: int) -> Album:
@@ -107,3 +106,37 @@ class AlbumService:
             raise ValueError("Album not found")
         album.delete()
         return None
+
+    def get_albums_by_artist_id(self, artist_id: int) -> list:
+        """
+        Get all albums by artist ID
+        :param artist_id: The artist ID
+        :return: The albums
+        """
+        albums = (
+            Album.query.join(AlbumArtist)
+            .filter(AlbumArtist.artist_id == artist_id)
+            .all()
+        )
+        return [album.__str__() for album in albums]
+
+    def count(self, keyword: str) -> int:
+        """
+        Count all albums
+        :param keyword: The keyword
+        :return: The count of albums
+        """
+        return Album.query.filter(
+            Album.name.ilike("%{keyword}".format(keyword=keyword))
+        ).count()
+
+    def get_artists(self, album_id: int) -> list:
+        """
+        Get all artists of a album
+        :param album_id: The album ID
+        :return: The artists
+        """
+        artists = AlbumArtist.query.filter_by(album_id=album_id).all()
+        if not artists:
+            return None
+        return [Artist.query.get(artist.artist_id) for artist in artists]
