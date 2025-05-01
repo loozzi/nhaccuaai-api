@@ -28,7 +28,7 @@ class TrackController:
                 "id": track["id"],
                 "name": track["name"],
                 "image": track["image"],
-                "artist": self.track_srv.get_artists(track["id"])[0],
+                "artists": self.track_srv.get_artists(track["id"]),
                 "permalink": track["permalink"],
                 "type": track["type"],
                 "duration": track["duration"],

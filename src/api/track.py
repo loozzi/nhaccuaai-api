@@ -1,7 +1,9 @@
+import os
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Body, Path, Query
+from fastapi import APIRouter, Body, Path, Query, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from src.controllers import TrackController
@@ -136,6 +138,77 @@ async def get_track_by_permalink(
             200,
             "Success",
             result,
+        )
+    except Exception as e:
+        return response(400, str(e))
+
+
+@router.get("/play/{permalink}")
+async def play_track(
+    permalink: str = Path(..., description="Permalink của bài hát"),
+    request: Request = None,
+):
+    """
+    Phát bài hát theo permalink
+    """
+    try:
+        headers = {
+            "Content-Type": "audio/mpeg",
+            "Accept-Ranges": "bytes",
+            "Content-Disposition": "inline; filename={0}.mp3".format(permalink),
+        }
+
+        file_path = "songs/{}.mp3".format(permalink)
+        file_size = os.path.getsize(file_path)
+
+        status_code = 200
+        range_start = 0
+        range_end = file_size - 1
+        range_header = request.headers.get("Range")
+        if range_header:
+            try:
+                range_str = range_header.replace("bytes=", "").split("-")
+                range_start = int(range_str[0]) if range_str[0] else 0
+                range_end = int(range_str[1]) if range_str[1] else file_size - 1
+            except (ValueError, IndexError):
+                raise Exception("Invalid Range header")
+
+            # Đảm bảo range hợp lệ
+            if (
+                range_start >= file_size
+                or range_end >= file_size
+                or range_start > range_end
+            ):
+                raise Exception("Range not satisfiable")
+
+            # Cập nhật headers cho phản hồi Range
+            status_code = 206  # Partial Content
+            headers.update(
+                {
+                    "Content-Range": f"bytes {range_start}-{range_end}/{file_size}",
+                    "Content-Length": str(range_end - range_start + 1),
+                }
+            )
+
+        def iterfile():
+            with open(file_path, mode="rb") as file:
+                file.seek(range_start)  # Di chuyển con trỏ file đến vị trí bắt đầu
+                remaining_bytes = range_end - range_start + 1
+                while remaining_bytes > 0:
+                    chunk_size = min(
+                        8192, remaining_bytes
+                    )  # Đọc tối đa 8KB hoặc phần còn lại
+                    chunk = file.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+                    remaining_bytes -= len(chunk)
+
+        return StreamingResponse(
+            iterfile(),
+            media_type="audio/mpeg",
+            headers=headers,
+            status_code=status_code,
         )
     except Exception as e:
         return response(400, str(e))

@@ -24,7 +24,7 @@ class AlbumController:
                 "id": album["id"],
                 "name": album["name"],
                 "image": album["image"],
-                "artist": self.album_service.get_artists(album["id"])[0],
+                "artists": self.album_service.get_artists(album["id"]),
                 "permalink": album["permalink"],
                 "type": album["album_type"],
                 "duration": 0,
@@ -41,13 +41,15 @@ class AlbumController:
         :return: The album
         """
         album = self.album_service.get_by_id(id)
+        album["type"] = album["album_type"]
+        del album["album_type"]
         album["artists"] = list(set(self.album_service.get_artists(id)))
         tracks = [
             {
                 "id": track["id"],
                 "name": track["name"],
                 "image": track["image"],
-                "artist": self.track_service.get_artists(track["id"])[0],
+                "artists": self.track_service.get_artists(track["id"]),
                 "permalink": track["permalink"],
                 "type": track["type"],
                 "duration": track["duration"],

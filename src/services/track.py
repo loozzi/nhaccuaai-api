@@ -169,7 +169,20 @@ class TrackService:
         :return: The tracks
         """
         tracks = Track.query.filter_by(album_id=id).all()
-        return [track.__str__() for track in tracks]
+        tracks = [track.__str__() for track in tracks]
+        tracks_response = [
+            {
+                "id": track["id"],
+                "name": track["name"],
+                "image": track["image"],
+                "artists": self.get_artists(track["id"]),
+                "permalink": track["permalink"],
+                "type": track["type"],
+                "duration": track["duration"],
+            }
+            for track in tracks
+        ]
+        return tracks_response
 
     def get_by_artist_id(self, id: int) -> list:
         """
@@ -178,4 +191,17 @@ class TrackService:
         :return: The tracks
         """
         tracks = Track.query.join(TrackArtist).filter(TrackArtist.artist_id == id).all()
-        return [track.__str__() for track in tracks]
+        tracks = [track.__str__() for track in tracks]
+        tracks_response = [
+            {
+                "id": track["id"],
+                "name": track["name"],
+                "image": track["image"],
+                "artists": self.get_artists(track["id"]),
+                "permalink": track["permalink"],
+                "type": track["type"],
+                "duration": track["duration"],
+            }
+            for track in tracks
+        ]
+        return tracks_response

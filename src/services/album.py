@@ -139,4 +139,4 @@ class AlbumService:
         artists = AlbumArtist.query.filter_by(album_id=album_id).all()
         if not artists:
             return None
-        return [Artist.query.get(artist.artist_id) for artist in artists]
+        return list(set([Artist.query.get(artist.artist_id) for artist in artists]))
