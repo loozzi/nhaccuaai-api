@@ -139,7 +139,8 @@ class TrackController:
         :param link: The link
         :return: The crawled tracks
         """
-        song_info = self.crawler.song_info(id=link)
+        id = link.split("/")[-1].split("?")[0]
+        song_info = self.crawler.song_info(id=id)
 
         if song_info is None:
             raise ValueError("Song not found")
