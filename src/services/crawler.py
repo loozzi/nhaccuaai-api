@@ -323,7 +323,7 @@ class CrawlerService:
 
         return artist.__str__()
 
-    def store_genres(self, genres: list[str]) -> list[int]:
+    def store_genres(self, genres: list) -> list:
         """
         Store the genres
         :param genres: The genres
