@@ -59,6 +59,7 @@ app.add_middleware(
 from .api.album import router as album_router
 from .api.artist import router as artist_router
 from .api.auth import router as auth_router
+from .api.browse import router as browse_router
 from .api.genre import router as genre_router
 from .api.track import router as track_router
 
@@ -72,6 +73,7 @@ app.include_router(genre_router, prefix=prefix)
 app.include_router(artist_router, prefix=prefix)
 app.include_router(album_router, prefix=prefix)
 app.include_router(track_router, prefix=prefix)
+app.include_router(browse_router, prefix=prefix)
 
 
 # Sử dụng on_event để thiết lập và giải phóng tài nguyên

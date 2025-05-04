@@ -1,4 +1,10 @@
-from src.services import ArtistService, Crawler, CrawlerService, TrackService
+from src.services import (
+    AlbumService,
+    ArtistService,
+    Crawler,
+    CrawlerService,
+    TrackService,
+)
 from src.utils.pagination import pagination_response
 
 
@@ -8,6 +14,7 @@ class TrackController:
         self.crawler = Crawler()
         self.artist_srv = ArtistService()
         self.track_srv = TrackService()
+        self.album_srv = AlbumService()
         self.crawl_srv = CrawlerService()
 
     def get_all(self, limit: int, page: int, keyword: str) -> list:
@@ -49,6 +56,12 @@ class TrackController:
         track = self.srv.get_by_id(id)
         track["artists"] = self.track_srv.get_artists(id)
 
+        try:
+            album = self.album_srv.get_by_id(track["album_id"])
+            track["album"] = album
+            del track["album_id"]
+        except ValueError:
+            print("Album not found")
         return track
 
     def get_by_permalink(self, permalink: str) -> dict:
@@ -59,6 +72,12 @@ class TrackController:
         """
         track = self.srv.get_by_permalink(permalink)
         track["artists"] = self.track_srv.get_artists(track["id"])
+        try:
+            album = self.album_srv.get_by_id(track["album_id"])
+            track["album"] = album
+            del track["album_id"]
+        except ValueError:
+            print("Album not found")
         return track
 
     def store(self, data: dict) -> dict:

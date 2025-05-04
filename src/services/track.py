@@ -66,9 +66,6 @@ class TrackService:
         if not track:
             raise ValueError("Track not found")
 
-        track_artists = TrackArtist.query.filter_by(track_id=id).all()
-        if track_artists:
-            track.artists = self.get_artists(track_artists)
         return track.__str__()
 
     def store(self, data: dict) -> Track:
