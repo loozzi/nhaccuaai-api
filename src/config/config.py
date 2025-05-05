@@ -4,13 +4,10 @@ from .productionConfig import ProductionConfig
 
 class Config:
     def __init__(self):
-        self.__devConfig = DevConfig()
-        self.__prodConfig = ProductionConfig()
-
         self.PREFIX_URL = "/api"
 
     def getDevConfig(self):
-        return self.__devConfig
+        return DevConfig()
 
     def getProdConfig(self):
-        return self.__prodConfig
+        return ProductionConfig()

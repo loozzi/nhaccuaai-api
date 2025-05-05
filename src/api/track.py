@@ -152,10 +152,11 @@ async def play_track(
     Phát bài hát theo permalink
     """
     try:
+        track = TrackController().get_by_permalink(permalink)
         headers = {
             "Content-Type": "audio/mpeg",
             "Accept-Ranges": "bytes",
-            "Content-Disposition": "inline; filename={0}.mp3".format(permalink),
+            "Content-Disposition": "inline; filename={0}.mp3".format(track["name"]),
         }
 
         file_path = "songs/{}.mp3".format(permalink)

@@ -13,9 +13,10 @@ from .config import _config
 flask_app = Flask(__name__)
 bcrypt = Bcrypt(flask_app)
 
-config = _config.getProdConfig()
 if len(sys.argv) > 1 and sys.argv[1] == "--dev":
     config = _config.getDevConfig()
+else:
+    config = _config.getProdConfig()
 
 env = config.ENV
 

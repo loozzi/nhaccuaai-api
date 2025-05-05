@@ -15,3 +15,11 @@ Run command to create migration:
 Then, upgrade database:
 
     flask db upgrade
+
+If you using FastAPI, go to folder has file `alembic.ini` and run:
+
+    alembic upgrade head
+
+or
+
+    flask src:flask_app db upgrade
